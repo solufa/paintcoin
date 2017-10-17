@@ -77,6 +77,8 @@ var readyPromise = new Promise((resolve, reject) => {
   _reject = reject
 })
 
+var https = require('https')
+var fs = require('fs')
 var server
 var portfinder = require('portfinder')
 portfinder.basePort = port
@@ -88,13 +90,13 @@ devMiddleware.waitUntilValid(() => {
       _reject(err)
     }
     process.env.PORT = port
-    var uri = 'http://localhost:' + port
+    var uri = 'https://localhost:' + port
     console.log('> Listening at ' + uri + '\n')
     // when env is testing, don't need open it
     if (autoOpenBrowser && process.env.NODE_ENV !== 'testing') {
       opn(uri)
     }
-    server = app.listen(port)
+    server = require('https').createServer({ pfx: fs.readFileSync(__dirname + '/mysslserver.pfx') }, app).listen(port)
     _resolve()
   })
 })
