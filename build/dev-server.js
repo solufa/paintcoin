@@ -68,7 +68,27 @@ app.use(devMiddleware)
 const staticPath = path.posix.join(config.dev.assetsPublicPath, config.dev.assetsSubDirectory)
 app.use(staticPath, express.static('./static'))
 
-const uri = 'http://localhost:' + port
+const os = require( "os" )
+const ip_address = function() {
+  var ifaces = os.networkInterfaces()
+  var ipAddress
+
+  Object.keys(ifaces).forEach(function (ifname) {
+    ifaces[ifname].forEach(function (iface) {
+
+      if ('IPv4' !== iface.family || iface.internal !== false) {
+        // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
+        return
+      }
+
+      // en0 192.168.1.NNN
+      ipAddress = iface.address
+
+    });
+  });
+
+  return ipAddress
+}()
 
 var _resolve
 var _reject
@@ -90,7 +110,7 @@ devMiddleware.waitUntilValid(() => {
       _reject(err)
     }
     process.env.PORT = port
-    var uri = 'https://localhost:' + port
+    var uri = `https://${ip_address}:${port}`
     console.log('> Listening at ' + uri + '\n')
     // when env is testing, don't need open it
     if (autoOpenBrowser && process.env.NODE_ENV !== 'testing') {
