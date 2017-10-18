@@ -6,9 +6,10 @@
       </div>
     </div>
     <video ref="video" playsinline @canplaythrough="startRendering"/>
-
     <div class="controls">
-      <div class="backBtn" @click="closeApp">Back</div>
+      <ThresholdBar class="thresholdBar" :value="threshold" :onChange="onChangeThreshold"/>
+      <div class="backBtn" @click="closeApp">Top</div>
+      <div class="facingBtn" @click="changeFacing">カメラ変更</div>
       <div class="shutter" @click="shoot"/>
     </div>
 
@@ -21,10 +22,14 @@
 import getCam from '@/utils/getCam';
 import detectCanvas from '@/utils/detectCanvas';
 import CheckImage from '@/components/CheckImage';
+import ThresholdBar from '@/components/ThresholdBar';
+import osType from '@/utils/osType';
+
+let facingMode = 'environment';
 
 export default {
-  props: ['onClose', 'threshold', 'radius', 'onSet'],
-  components: { CheckImage },
+  props: ['onClose', 'threshold', 'radius', 'onSet', 'onChangeThreshold'],
+  components: { CheckImage, ThresholdBar },
   data() {
     return {
       reqID: null,
@@ -34,14 +39,18 @@ export default {
       ctx: null,
       imageData: null,
       checking: false,
+      isPC: osType.isPC(),
     };
   },
   mounted() {
-    getCam(this.$refs.video, { video: { facingMode: 'environment' }, audio: false }, () => {
-      this.onClose();
-    });
+    this.setVideo();
   },
   methods: {
+    setVideo() {
+      getCam(this.$refs.video, { video: { facingMode }, audio: false }, () => {
+        this.onClose();
+      });
+    },
     startRendering() {
       const video = this.$refs.video;
       const vw = video.videoWidth;
@@ -61,7 +70,6 @@ export default {
     },
     stopRendering() {
       cancelAnimationFrame(this.reqID);
-      this.$refs.video.pause();
     },
     render() {
       const length = this.length;
@@ -96,13 +104,17 @@ export default {
         this.checking = true;
       }, 500);
     },
+    changeFacing() {
+      facingMode = facingMode === 'user' ? 'environment' : 'user';
+      this.setVideo();
+    },
     onDecide(imageData) {
       this.checking = false;
+      this.$refs.video.pause();
       this.onSet(imageData);
     },
     onCancel() {
       this.checking = false;
-      this.$refs.video.play();
       this.render();
     },
   },
@@ -169,6 +181,16 @@ video {
   border-color: #fff;
 }
 
+.facingBtn {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: 20px;
+  padding: 10px;
+}
+
 .shutter {
   width: 40px;
   height: 40px;
@@ -194,5 +216,10 @@ video {
   right: 0;
   bottom: 0;
   display: none;
+}
+
+.thresholdBar {
+  width: 80%;
+
 }
 </style>

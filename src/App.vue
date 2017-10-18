@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <CameraApp v-if="mode === 1" :onClose="closeCamApp" :onSet="setImageData" :threshold="threshold" :radius="radius"/>
+    <CameraApp v-if="mode === 1" :onClose="closeCamApp" :onChangeThreshold="changeThreshold" :onSet="setImageData" :threshold="threshold" :radius="radius"/>
+    <Viewer v-if="mode === 3" :imageData="imageData" :radius="radius"/>
     <div class="openCamBtn" @click="openCamApp">Camera</div>
     <router-view/>
   </div>
@@ -8,16 +9,19 @@
 
 <script>
 import CameraApp from '@/components/CameraApp';
+import Viewer from '@/components/Viewer';
 
 export default {
   components: {
     CameraApp,
+    Viewer,
   },
   data() {
     return {
-      mode: 0, // 1: camera app
+      mode: 0, // 1: camera app, 2: localimage app, 3: three.js
       threshold: 120,
       radius: 0.9,
+      imageData: null,
     };
   },
   methods: {
@@ -28,8 +32,11 @@ export default {
       this.mode = 0;
     },
     setImageData(imageData) {
-      this.mode = 0;
-      console.log(imageData);
+      this.mode = 3;
+      this.imageData = imageData;
+    },
+    changeThreshold(threshold) {
+      this.threshold = threshold;
     },
   },
 };
