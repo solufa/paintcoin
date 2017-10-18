@@ -9,7 +9,7 @@
 
 <script>
 import CameraApp from '@/components/CameraApp';
-import Viewer from '@/components/Viewer';
+import Viewer from '@/threejs/Viewer';
 
 export default {
   components: {
