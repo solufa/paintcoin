@@ -1,9 +1,9 @@
 <template>
   <div class="root">
-    <div id="canvasFrame" :style="{ maxWidth: `${imageData.width}px` }">
+    <div id="canvasFrame" :style="{ maxWidth: `${imageData.width / radius}px` }">
       <div>
         <div class="frameBorder" :style="{ width: `${(radius + 0.02) * 100}%`, height: `${(radius + 0.02) * 100}%` }"/>
-        <canvas ref="canvas"/>
+        <canvas ref="canvas" :style="{ width: 100 * radius + '%', height: 100 * radius + '%' }"/>
       </div>
     </div>
     <div class="controls">
@@ -27,7 +27,7 @@ export default {
     const canvas = this.$refs.canvas;
     canvas.width = this.imageData.width;
     canvas.height = this.imageData.width;
-    this.data = detectCanvas(this.imageData, this.threshold, this.radius, 1);
+    this.data = detectCanvas(this.imageData, this.threshold, 1, 1);
     canvas.getContext('2d').putImageData(this.data, 0, 0);
   },
   methods: {
@@ -68,10 +68,9 @@ export default {
 
 canvas {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
 }
 
 .controls {
@@ -89,5 +88,6 @@ canvas {
   margin: 0 20px;
   border: 1px solid #222;
   color: #222;
+  cursor: pointer;
 }
 </style>

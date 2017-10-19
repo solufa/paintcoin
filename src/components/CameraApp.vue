@@ -7,7 +7,7 @@
     </div>
     <video ref="video" playsinline @canplaythrough="startRendering"/>
     <div class="controls">
-      <ThresholdBar class="thresholdBar" :value="threshold" :onChange="onChangeThreshold"/>
+      <ThresholdBar class="thresholdBar" :value="threshold" :onChange="changeThreshold"/>
       <div class="backBtn" @click="closeApp">Top</div>
       <div class="facingBtn" @click="changeFacing">カメラ変更</div>
       <div class="shutter" @click="shoot"/>
@@ -28,10 +28,12 @@ import osType from '@/utils/osType';
 let facingMode = 'environment';
 
 export default {
-  props: ['onClose', 'threshold', 'radius', 'onSet', 'onChangeThreshold'],
+  props: ['onClose', 'onSet'],
   components: { CheckImage, ThresholdBar },
   data() {
     return {
+      threshold: 120,
+      radius: 0.9,
       reqID: null,
       vw: null,
       vh: null,
@@ -95,7 +97,7 @@ export default {
         this.$refs.blackFilter.style.display = 'none';
         this.$refs.blackFilter.style.opacity = 1;
 
-        const length = this.length;
+        const length = this.length * this.radius;
         const ctx = this.ctx;
 
         ctx.drawImage(this.$refs.video, (this.vw - length) / 2, (this.vh - length) / 2,
@@ -116,6 +118,9 @@ export default {
     onCancel() {
       this.checking = false;
       this.render();
+    },
+    changeThreshold(threshold) {
+      this.threshold = threshold;
     },
   },
 };
@@ -157,6 +162,7 @@ video {
 
 .controls {
   position: absolute;
+  padding-top: 20px;
   left: 0;
   right: 0;
   bottom: 0;

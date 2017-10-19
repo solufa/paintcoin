@@ -1,9 +1,9 @@
 <template>
   <div id="app">
-    <CameraApp v-if="mode === 1" :onClose="closeCamApp" :onChangeThreshold="changeThreshold" :onSet="setImageData" :threshold="threshold" :radius="radius"/>
-    <Viewer v-if="mode === 3" :imageData="imageData" :radius="radius"/>
-    <div class="openCamBtn" @click="openCamApp">Camera</div>
-    <router-view/>
+    <CameraApp v-if="mode === 1" :onClose="closeCamApp" :onSet="setImageData"/>
+    <Viewer v-if="mode === 3" :imageData="imageData"/>
+    <div v-if="mode === 0" class="openCamBtn0" @click="openCamApp">Camera</div>
+    <div v-if="mode === 3" class="openCamBtn3" @click="openCamApp">撮り直す</div>
   </div>
 </template>
 
@@ -19,8 +19,6 @@ export default {
   data() {
     return {
       mode: 0, // 1: camera app, 2: localimage app, 3: three.js
-      threshold: 120,
-      radius: 0.9,
       imageData: null,
     };
   },
@@ -35,12 +33,17 @@ export default {
       this.mode = 3;
       this.imageData = imageData;
     },
-    changeThreshold(threshold) {
-      this.threshold = threshold;
-    },
   },
 };
 </script>
+
+<style>
+* {
+ margin: 0;
+ padding: 0;
+ user-select: none;
+}
+</style>
 
 <style scoped>
 #app {
@@ -49,14 +52,26 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 
-.openCamBtn {
+.openCamBtn0 {
   width: 300px;
   border: 1px solid #444;
   padding: 10px 0;
-  margin: 10px auto;
+  font-size: 24px;
+  margin: 200px auto 0;
   cursor: pointer;
+}
+
+.openCamBtn3 {
+  width: 300px;
+  position: relative;
+  background: #fff;
+  padding: 10px 0;
+  font-size: 24px;
+  margin: 30px auto;
+  cursor: pointer;
+  color: #222;
+  box-shadow: 0 5px 10px 3px rgba(0, 0, 0, 0.3);
 }
 </style>

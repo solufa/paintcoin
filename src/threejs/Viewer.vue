@@ -8,14 +8,14 @@
 import ThreeCtrl from './ThreeCtrl';
 
 export default {
-  props: ['imageData', 'radius'],
+  props: ['imageData'],
   data() {
     return {
       threeCtrl: null,
     };
   },
   mounted() {
-    this.threeCtrl = new ThreeCtrl(this.$refs.container, this.imageData, this.radius);
+    this.threeCtrl = new ThreeCtrl(this.$refs.container, this.imageData);
   },
   destroyed() {
     this.threeCtrl.destroy();
@@ -23,10 +23,16 @@ export default {
 };
 </script>
 
+<style>
+body {
+  background: center/cover url('/static/image/back.jpg') no-repeat;
+}
+</style>
+
 <style scoped>
 .root {
   margin: 0 auto;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .root > div {
