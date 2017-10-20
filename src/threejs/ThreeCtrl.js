@@ -1,3 +1,6 @@
+import saveImage from '@/utils/saveImage';
+
+require('canvas-toBlob');
 const THREE = require('three');
 const OrbitControls = require('three-orbitcontrols');
 
@@ -9,17 +12,7 @@ function formatImageData(imageData) {
   const data = new Uint8Array(imageData.data.buffer);
   for (let i = 0; i < imageData.width ** 2; i += 1) {
     if (data[(i * 4) + 3] === 255) {
-      if (data[i * 4] === 0) {
-        data[i * 4] = 0;
-        data[(i * 4) + 1] = 0;
-        data[(i * 4) + 2] = 0;
-        data[(i * 4) + 3] = 60;
-      } else {
-        data[i * 4] = 255;
-        data[(i * 4) + 1] = 255;
-        data[(i * 4) + 2] = 255;
-        data[(i * 4) + 3] = 0;
-      }
+      data[(i * 4) + 3] = data[i * 4] === 0 ? 80 : 0;
     }
   }
   return data;
@@ -47,7 +40,9 @@ export default class {
   }
 
   initRenderer() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer = new THREE.WebGLRenderer({
+      preserveDrawingBuffer: true, antialias: true, alpha: true,
+    });
     this.container.appendChild(this.renderer.domElement);
     this.renderer.setClearColor(0xffffff, 0);
 
@@ -178,12 +173,12 @@ export default class {
   }
 
   initLight() {
-    const frontLight = new THREE.DirectionalLight(0xffffff, 1);
-    frontLight.position.set(0, 1, 2);
+    const frontLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    frontLight.position.set(0, 0.5, 2);
     this.scene.add(frontLight);
 
-    const backLight = new THREE.DirectionalLight(0xffffff, 1);
-    backLight.position.set(0, 1, -2);
+    const backLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    backLight.position.set(0, 0.5, -2);
     this.scene.add(backLight);
   }
 
@@ -209,5 +204,23 @@ export default class {
     window.removeEventListener('resize', this.resize, false);
     cancelAnimationFrame(this.reqID);
     this.renderer.dispose();
+  }
+
+  savePng() {
+    this.cameraCtrl.saveState();
+    this.camera.position.set(0, 0, RADIUS * 1.5);
+    this.camera.lookAt(this.cameraCtrl.target);
+    this.renderer.render(this.scene, this.camera);
+
+    this.renderer.domElement.toBlob(blob => saveImage(blob, 'paintcoin.png'), 'application/octet-stream');
+    this.cameraCtrl.reset();
+  }
+
+  saveGif() {
+    this.cameraCtrl.saveState();
+    // this.camera.position.set(0, 0, RADIUS * 1.5);
+    // this.camera.lookAt(this.cameraCtrl.target);
+    // this.renderer.render(this.scene, this.camera);
+    // this.cameraCtrl.reset();
   }
 }

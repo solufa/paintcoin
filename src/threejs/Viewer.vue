@@ -1,6 +1,9 @@
 <template>
   <div class="root">
     <div><div class="container" ref="container"/></div>
+    <div class="btn" @click="onSavePng">▼透過PNGをDL</div>
+    <div class="btn" @click="onSaveGif">▼GIFアニメをDL</div>
+    <div class="btn" @click="onRetake">撮り直す</div>
   </div>
 </template>
 
@@ -8,11 +11,19 @@
 import ThreeCtrl from './ThreeCtrl';
 
 export default {
-  props: ['imageData'],
+  props: ['imageData', 'onRetake'],
   data() {
     return {
       threeCtrl: null,
     };
+  },
+  methods: {
+    onSavePng() {
+      this.threeCtrl.savePng();
+    },
+    onSaveGif() {
+      this.threeCtrl.saveGif();
+    },
   },
   mounted() {
     this.threeCtrl = new ThreeCtrl(this.$refs.container, this.imageData);
@@ -35,7 +46,7 @@ body {
   max-width: 500px;
 }
 
-.root > div {
+.root > div:first-child {
   position: relative;
   padding-top: 100%;
 }
@@ -46,5 +57,17 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.btn {
+  width: 300px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 0;
+  font-size: 24px;
+  margin: 30px auto;
+  cursor: pointer;
+  color: #222;
+  box-shadow: 0 5px 10px 3px rgba(0, 0, 0, 0.3);
 }
 </style>

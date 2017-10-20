@@ -6,6 +6,7 @@ if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = JSON.parse(config.dev.env.NODE_ENV)
 }
 
+const fs = require('fs')
 const opn = require('opn')
 const path = require('path')
 const express = require('express')
@@ -25,6 +26,22 @@ const proxyTable = config.dev.proxyTable
 
 const app = express()
 const compiler = webpack(webpackConfig)
+const multer = require('multer')
+const uploads_dir = './tmp'
+
+if (!fs.existsSync(uploads_dir)) fs.mkdirSync(uploads_dir, '0777')
+
+app.post('/download', multer({ dest: uploads_dir }).single('file'), (req, res) => {
+  res.json({ tmp_name: req.file.path.split(/(\\|\/)/g).pop() })
+})
+
+app.get('/download/:tmp_name/:file_name', (req, res) => {
+  const file_path = path.join(uploads_dir, req.params.tmp_name)
+  res.setHeader('Content-Type', `application/octet-stream`)
+  res.setHeader('Content-Disposition', `attachment;filename="${req.params.file_name}"`)
+  res.end(fs.readFileSync(file_path, 'binary'), 'binary')
+  fs.unlink(file_path, () => {})
+});
 
 const devMiddleware = require('webpack-dev-middleware')(compiler, {
   publicPath: webpackConfig.output.publicPath,
@@ -98,7 +115,6 @@ var readyPromise = new Promise((resolve, reject) => {
 })
 
 var https = require('https')
-var fs = require('fs')
 var server
 var portfinder = require('portfinder')
 portfinder.basePort = port
