@@ -9,7 +9,7 @@
     <div class="controls">
       <ThresholdBar class="thresholdBar" :value="threshold" :onChange="changeThreshold"/>
       <div class="backBtn" @click="closeApp">Top</div>
-      <div class="facingBtn" @click="changeFacing">カメラ変更</div>
+      <div class="facingBtn" v-if="!isPC" @click="changeFacing">カメラ変更</div>
       <div class="shutter" @click="shoot"/>
     </div>
 
