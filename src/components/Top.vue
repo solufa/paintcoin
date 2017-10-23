@@ -19,7 +19,6 @@
 <script>
 import loadImage from 'blueimp-load-image';
 import ThreeCtrl from '@/threejs/ThreeCtrl';
-import osType from '@/utils/osType';
 import ContactUs from './ContactUs';
 
 export default {
@@ -59,7 +58,7 @@ export default {
   },
   mounted() {
     const image = new Image();
-    image.src = `./image/logo_${osType.isPC() ? 'large' : 'small'}.png`;
+    image.src = './image/theme.png';
     image.onload = () => {
       const canvas = document.createElement('canvas');
       const length = image.width * 1.1;
@@ -165,12 +164,18 @@ export default {
 }
 
 @media screen and (max-width: 500px) {
+  .btnFrame {
+    bottom: 70px;
+  }
+
   .btnDesc {
-    font-size: 24px;
+    padding: 8px 45px;
+    font-size: 20px;
   }
 
   .btn {
-    font-size: 18px;
+    font-size: 16px;
+    padding: 8px 0;
   }
 
   .icon {
