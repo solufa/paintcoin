@@ -1,28 +1,70 @@
 <template>
-  <div class="root">
-    <div><div class="container" ref="container"/></div>
-    <div class="btn" @click="onSavePng">▼透過PNGをDL</div>
-    <div class="btn" @click="onSaveGif">▼GIFアニメをDL</div>
-    <div class="btn" @click="onRetake">撮り直す</div>
+  <div>
+    <div class="main">
+      <div class="container" ref="container"/>
+      <div class="btnFrame">
+        <div class="btn" @click="onSavePng">Save PNG</div>
+        <div class="btn" @click="onSaveGif">Save GIF</div>
+        <div class="btn" @click="onClose">TOP</div>
+      </div>
+    </div>
+    <div class="saveArea" ref="saveArea" v-show="url">
+      <div>
+        <div v-if="isSafari" class="safariText">Press and hold to save image</div>
+        <img :src="url"/>
+      </div>
+      <div class="social">
+        <div class="fb-share-button" data-layout="button_count" data-size="large"/>
+        <a class="twitter-share-button" href="https://twitter.com/share" data-dnt="true" data-size="large"/>
+      </div>
+      <div class="linkText">Other works</div>
+      <a href="https://swipe.video/" target="_brank"><img src="../assets/swipevideo.jpg"/></a>
+      <div class="closeBtn" @click="closeSaveArea">Close</div>
+    </div>
   </div>
 </template>
 
 <script>
 import ThreeCtrl from './ThreeCtrl';
 
+const { saveAs } = require('file-saver');
+const platform = require('platform');
+
 export default {
-  props: ['imageData', 'onRetake'],
+  props: ['imageData', 'onClose'],
   data() {
     return {
       threeCtrl: null,
+      url: null,
+      snsInit: false,
+      isSafari: platform.name === 'Safari',
     };
   },
   methods: {
     onSavePng() {
-      this.threeCtrl.savePng();
+      this.threeCtrl.getPngBlob(blob => this.saveImage(blob, 'png'));
     },
     onSaveGif() {
-      this.threeCtrl.saveGif();
+      this.threeCtrl.getGifBlob(blob => this.saveImage(blob, 'gif'));
+    },
+    saveImage(blob, type) {
+      const name = `paintcoin.${type}`;
+      if (!this.isSafari) saveAs(blob, name);
+
+      this.url = URL.createObjectURL(new File([blob], name, { type: `image/${type}` }));
+      setTimeout(() => this.threeCtrl.pause());
+
+      if (!this.snsInit) {
+        /* global FB, twttr */
+        FB.XFBML.parse(this.$refs.saveArea);
+        twttr.widgets.load(this.$refs.saveArea);
+        this.snsInit = true;
+      }
+    },
+    closeSaveArea() {
+      this.threeCtrl.play();
+      URL.revokeObjectURL(this.url);
+      this.url = null;
     },
   },
   mounted() {
@@ -34,40 +76,101 @@ export default {
 };
 </script>
 
-<style>
-body {
-  background: center/cover url('/static/image/back.jpg') no-repeat;
-}
-</style>
-
 <style scoped>
-.root {
-  margin: 0 auto;
-  max-width: 500px;
-}
-
-.root > div:first-child {
-  position: relative;
-  padding-top: 100%;
+.main {
+  background: center/cover url('../assets/back.jpg') no-repeat;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
   height: 100%;
+  width: 100%;
+}
+
+.btnFrame {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .btn {
-  width: 300px;
-  position: relative;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 0;
+  float: left;
+  width: 33.33%;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 12px 0;
   font-size: 24px;
-  margin: 30px auto;
   cursor: pointer;
   color: #222;
-  box-shadow: 0 5px 10px 3px rgba(0, 0, 0, 0.3);
+  transition: 0.25s;
+}
+
+.btn:hover {
+  background: rgba(120, 120, 120, 0.8);
+  color: #fff;
+}
+
+.saveArea {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px 0 50px;
+  box-sizing: border-box;
+  color: #222;
+}
+
+.safariText {
+  font-size: 20px;
+  padding-top: 10px;
+}
+
+.saveArea img {
+  width: 500px;
+  max-width: 80%;
+  margin: 10px auto 0;
+}
+
+.social {
+  margin: 20px 0 50px;
+}
+
+.linkText {
+  font-size: 30px;
+}
+
+.closeBtn {
+  border-radius: 5px;
+  background: #666;
+  margin: 30px auto 0;
+  color: #fff;
+  cursor: pointer;
+  width: 100px;
+  padding: 12px 0;
+  font-size: 20px;
+  font-weight: bold;
+  transition: 0.25s;
+}
+
+.closeBtn:hover {
+  background: #ddd;
+  color: #222;
+}
+
+@media screen and (max-width: 500px) {
+  .btn {
+    font-size: 18px;
+  }
+}
+</style>
+
+<style>
+.social > iframe {
+  vertical-align: bottom;
+  margin-left: 10px;
 }
 </style>

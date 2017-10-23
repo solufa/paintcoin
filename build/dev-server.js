@@ -6,7 +6,6 @@ if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = JSON.parse(config.dev.env.NODE_ENV)
 }
 
-const fs = require('fs')
 const opn = require('opn')
 const path = require('path')
 const express = require('express')
@@ -26,22 +25,6 @@ const proxyTable = config.dev.proxyTable
 
 const app = express()
 const compiler = webpack(webpackConfig)
-const multer = require('multer')
-const uploads_dir = './tmp'
-
-if (!fs.existsSync(uploads_dir)) fs.mkdirSync(uploads_dir, '0777')
-
-app.post('/download', multer({ dest: uploads_dir }).single('file'), (req, res) => {
-  res.json({ tmp_name: req.file.path.split(/(\\|\/)/g).pop() })
-})
-
-app.get('/download/:tmp_name/:file_name', (req, res) => {
-  const file_path = path.join(uploads_dir, req.params.tmp_name)
-  res.setHeader('Content-Type', `application/octet-stream`)
-  res.setHeader('Content-Disposition', `attachment;filename="${req.params.file_name}"`)
-  res.end(fs.readFileSync(file_path, 'binary'), 'binary')
-  fs.unlink(file_path, () => {})
-});
 
 const devMiddleware = require('webpack-dev-middleware')(compiler, {
   publicPath: webpackConfig.output.publicPath,
@@ -85,28 +68,6 @@ app.use(devMiddleware)
 const staticPath = path.posix.join(config.dev.assetsPublicPath, config.dev.assetsSubDirectory)
 app.use(staticPath, express.static('./static'))
 
-const os = require( "os" )
-const ip_address = function() {
-  var ifaces = os.networkInterfaces()
-  var ipAddress
-
-  Object.keys(ifaces).forEach(function (ifname) {
-    ifaces[ifname].forEach(function (iface) {
-
-      if ('IPv4' !== iface.family || iface.internal !== false) {
-        // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
-        return
-      }
-
-      // en0 192.168.1.NNN
-      ipAddress = iface.address
-
-    });
-  });
-
-  return ipAddress
-}()
-
 var _resolve
 var _reject
 var readyPromise = new Promise((resolve, reject) => {
@@ -115,6 +76,7 @@ var readyPromise = new Promise((resolve, reject) => {
 })
 
 var https = require('https')
+var fs = require('fs')
 var server
 var portfinder = require('portfinder')
 portfinder.basePort = port
@@ -126,7 +88,7 @@ devMiddleware.waitUntilValid(() => {
       _reject(err)
     }
     process.env.PORT = port
-    var uri = `https://${ip_address}:${port}`
+    var uri = 'https://localhost:' + port
     console.log('> Listening at ' + uri + '\n')
     // when env is testing, don't need open it
     if (autoOpenBrowser && process.env.NODE_ENV !== 'testing') {
