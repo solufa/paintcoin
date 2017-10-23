@@ -1,5 +1,5 @@
 <template>
-  <div class="root">
+  <div class="root" :style="{ backgroundImage: 'url(./image/contact.jpg)' }">
       <div class="text">We offer HTML5 application to company site.</div>
       <div class="title">Contact Us <span>(EN/JP)</span></div>
       <iframe class="form" allowTransparency="true" frameborder="0" scrolling="yes" src="https://amatelus.wufoo.com/embed/zm5p8mb14jofnu/"/>
@@ -18,7 +18,7 @@ export default {
 .root {
   position: relative;
   min-height: 100vh;
-  background: center/cover url(../assets/contact.jpg);
+  background: center/cover;
   color: #fff;
   text-align: center;
 }

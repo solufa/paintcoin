@@ -1,6 +1,6 @@
 <template>
   <div :class="['root', size]">
-    <a href="/"><img src="../assets/logo.png" class="logo"/></a>
+    <a href="/"><img :src="'./image/logo.png'" class="logo"/></a>
     <div class="social">
       <div class="fb-like" data-layout="button_count" :data-size="size"/>
       <a class="twitter-share-button" href="https://twitter.com/share" data-dnt="true" :data-size="size"/>

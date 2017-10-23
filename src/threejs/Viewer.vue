@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="main">
+    <div class="main" :style="{ backgroundImage: 'url(./image/back.jpg)' }">
       <div class="container" ref="container"/>
       <div class="btnFrame">
         <div class="btn" @click="onSavePng">Save PNG</div>
@@ -18,7 +18,7 @@
         <a class="twitter-share-button" href="https://twitter.com/share" data-dnt="true" data-size="large"/>
       </div>
       <div class="linkText">Other works</div>
-      <a href="https://swipe.video/" target="_brank"><img src="../assets/swipevideo.jpg"/></a>
+      <a href="https://swipe.video/" target="_brank"><img :src="'./image/swipevideo.jpg'"/></a>
       <div class="closeBtn" @click="closeSaveArea">Close</div>
     </div>
   </div>
@@ -78,7 +78,7 @@ export default {
 
 <style scoped>
 .main {
-  background: center/cover url('../assets/back.jpg') no-repeat;
+  background: center/cover no-repeat;
   position: fixed;
   top: 0;
   left: 0;

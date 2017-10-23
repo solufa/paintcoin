@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="main">
+    <div class="main" :style="{ backgroundImage: 'url(./image/back.jpg)' }">
       <div class="container" ref="container"/>
       <div class="btnFrame">
         <div class="btnDesc">Let's Paint !</div>
@@ -80,7 +80,7 @@ export default {
 
 <style scoped>
 .main {
-  background: center/cover url('../assets/back.jpg') no-repeat;
+  background: center/cover no-repeat;
   position: fixed;
   top: 0;
   left: 0;
