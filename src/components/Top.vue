@@ -59,7 +59,7 @@ export default {
   },
   mounted() {
     const image = new Image();
-    image.src = `./static/image/logo_${osType.isPC() ? 'large' : 'small'}.png`;
+    image.src = `./image/logo_${osType.isPC() ? 'large' : 'small'}.png`;
     image.onload = () => {
       const canvas = document.createElement('canvas');
       const length = image.width * 1.1;

@@ -59,7 +59,7 @@ export default class {
 
   initMaterial() {
     const loader = new THREE.CubeTextureLoader();
-    loader.setPath('./static/envMap/');
+    loader.setPath('./envMap/');
     const textureCube = loader.load([
       'posx.jpg',
       'negx.jpg',
@@ -245,7 +245,7 @@ export default class {
     const gif = new GIF({
       workers: 4,
       quality: 10,
-      workerScript: './static/libs/gif.worker.js',
+      workerScript: './libs/gif.worker.js',
       width: this.imageData.width,
       height: this.imageData.height,
       transparent: 0,
