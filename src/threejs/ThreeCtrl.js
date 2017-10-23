@@ -1,19 +1,15 @@
-import saveImage from '@/utils/saveImage';
-
 require('canvas-toBlob');
 const THREE = require('three');
 const OrbitControls = require('three-orbitcontrols');
 
 const RADIUS = 1;
 const SEGMENTS = 128;
-const THICKNESS = RADIUS / 8;
+const THICKNESS = RADIUS / 5;
 
 function formatImageData(imageData) {
   const data = new Uint8Array(imageData.data.buffer);
   for (let i = 0; i < imageData.width ** 2; i += 1) {
-    if (data[(i * 4) + 3] === 255) {
-      data[(i * 4) + 3] = data[i * 4] === 0 ? 80 : 0;
-    }
+    if (data[(i * 4) + 3] === 255) data[(i * 4) + 3] = data[i * 4] === 0 ? 120 : 0;
   }
   return data;
 }
@@ -37,6 +33,14 @@ export default class {
     this.initCoinPattern();
     this.initLight();
     this.initCamera();
+
+    this.resize = () => {
+      this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    };
+    window.addEventListener('resize', this.resize, false);
+    this.resize();
   }
 
   initRenderer() {
@@ -45,13 +49,7 @@ export default class {
     });
     this.container.appendChild(this.renderer.domElement);
     this.renderer.setClearColor(0xffffff, 0);
-
-    this.resize = () => {
-      this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-    };
-    window.addEventListener('resize', this.resize, false);
-    this.resize();
-    this.reqID = requestAnimationFrame(this.render.bind(this));
+    this.play();
   }
 
   initScene() {
@@ -61,7 +59,7 @@ export default class {
 
   initMaterial() {
     const loader = new THREE.CubeTextureLoader();
-    loader.setPath('./static/envMap/');
+    loader.setPath('./envMap/');
     const textureCube = loader.load([
       'posx.jpg',
       'negx.jpg',
@@ -183,12 +181,12 @@ export default class {
   }
 
   initCamera() {
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    camera.position.z = RADIUS * 2;
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 1000);
+    camera.position.z = RADIUS * 5;
 
     const controls = new OrbitControls(camera, this.renderer.domElement);
     controls.autoRotate = true;
-    controls.minDistance = RADIUS * 1.2;
+    controls.minDistance = RADIUS * 1.3;
 
     this.camera = camera;
     this.cameraCtrl = controls;
@@ -197,30 +195,96 @@ export default class {
   render() {
     this.cameraCtrl.update();
     this.renderer.render(this.scene, this.camera);
-    this.reqID = requestAnimationFrame(this.render.bind(this));
+    this.play();
   }
 
   destroy() {
     window.removeEventListener('resize', this.resize, false);
-    cancelAnimationFrame(this.reqID);
+    this.pause();
     this.renderer.dispose();
   }
 
-  savePng() {
+  play() {
+    this.reqID = requestAnimationFrame(this.render.bind(this));
+  }
+
+  pause() {
+    cancelAnimationFrame(this.reqID);
+  }
+
+  resize4Save() {
+    this.camera.aspect = 1;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(this.imageData.width, this.imageData.height);
+  }
+
+  getPngBlob(callback) {
+    this.resize4Save();
+    this.pause();
     this.cameraCtrl.saveState();
-    this.camera.position.set(0, 0, RADIUS * 1.5);
+    this.cameraCtrl.enabled = false;
+    this.camera.position.set(0, 0, RADIUS * 3.2);
     this.camera.lookAt(this.cameraCtrl.target);
     this.renderer.render(this.scene, this.camera);
 
-    this.renderer.domElement.toBlob(blob => saveImage(blob, 'paintcoin.png'), 'application/octet-stream');
-    this.cameraCtrl.reset();
+    setTimeout(() => { // for low spec devices
+      this.renderer.domElement.toBlob((blob) => {
+        callback(blob);
+        this.cameraCtrl.reset();
+        this.cameraCtrl.enabled = true;
+        this.resize();
+        this.play();
+      });
+    });
   }
 
-  saveGif() {
+  getGifBlob(callback) {
+    this.resize4Save();
+
+    /* global GIF */
+    const gif = new GIF({
+      workers: 4,
+      quality: 10,
+      workerScript: './libs/gif.worker.js',
+      width: this.imageData.width,
+      height: this.imageData.height,
+      transparent: 0,
+    });
+
+    gif.on('finished', (blob) => {
+      callback(blob);
+      this.cameraCtrl.reset();
+      this.resize();
+      this.cameraCtrl.enabled = true;
+      this.play();
+    });
+
     this.cameraCtrl.saveState();
-    // this.camera.position.set(0, 0, RADIUS * 1.5);
-    // this.camera.lookAt(this.cameraCtrl.target);
-    // this.renderer.render(this.scene, this.camera);
-    // this.cameraCtrl.reset();
+    this.cameraCtrl.enabled = false;
+    this.pause();
+
+    const frame = 20;
+    const duration = 2;
+    let index = 0;
+    const addFrame = () => {
+      if (index === frame) gif.render();
+      else {
+        this.camera.position.set(
+          Math.cos(((index * Math.PI) / frame) - (Math.PI / 2)) * RADIUS * 3.4,
+          0,
+          Math.sin(((index * Math.PI) / frame) - (Math.PI / 2)) * RADIUS * 3.4,
+        );
+        this.camera.lookAt(this.cameraCtrl.target);
+        this.renderer.render(this.scene, this.camera);
+
+        setTimeout(() => { // for low spec devices
+          index += 1;
+          gif.addFrame(this.renderer.domElement, { delay: (duration * 1000) / frame, copy: true });
+          addFrame();
+        });
+      }
+    };
+
+    addFrame();
   }
 }

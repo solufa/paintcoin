@@ -1,38 +1,59 @@
 <template>
   <div class="root">
-    <div id="canvasFrame" :style="{ maxWidth: `${imageData.width / radius}px` }">
+    <div id="canvasFrame" :style="{ maxWidth: `${Math.min(imageData.width / radius, 500)}px` }">
       <div>
         <div class="frameBorder" :style="{ width: `${(radius + 0.02) * 100}%`, height: `${(radius + 0.02) * 100}%` }"/>
         <canvas ref="canvas" :style="{ width: 100 * radius + '%', height: 100 * radius + '%' }"/>
       </div>
     </div>
     <div class="controls">
-      <div @click="onSelect">これでOK</div>
-      <div @click="onCancel">やり直し</div>
+      <ThresholdBar :value="threshold" :onChange="onChangeThreshold"/>
+      <div class="btn" @click="onSelect">Enter</div>
+      <div class="btn" @click="onCancel">Cancel</div>
     </div>
   </div>
 </template>
 
 <script>
 import detectCanvas from '@/utils/detectCanvas';
+import ThresholdBar from '@/components/ThresholdBar';
 
 export default {
-  props: ['onCancel', 'onDecide', 'threshold', 'imageData', 'radius'],
+  components: { ThresholdBar },
+  props: ['onCancel', 'onDecide', 'onChangeThreshold', 'threshold', 'imageData', 'radius'],
   data() {
     return {
-      data: null,
+      ctx: null,
     };
+  },
+  watch: {
+    threshold() {
+      this.draw();
+    },
   },
   mounted() {
     const canvas = this.$refs.canvas;
     canvas.width = this.imageData.width;
     canvas.height = this.imageData.width;
-    this.data = detectCanvas(this.imageData, this.threshold, 1, 1);
-    canvas.getContext('2d').putImageData(this.data, 0, 0);
+    this.ctx = canvas.getContext('2d');
+    this.draw();
   },
   methods: {
     onSelect() {
-      this.onDecide(this.data);
+      this.onDecide(this.ctx.getImageData(0, 0, this.imageData.width, this.imageData.height));
+    },
+    draw() {
+      const tmpImageData = this.ctx.getImageData(0, 0, this.imageData.width, this.imageData.height);
+      tmpImageData.data.set(detectCanvas(
+        {
+          data: new Uint8ClampedArray(this.imageData.data),
+          width: this.imageData.width,
+        },
+        this.threshold,
+        1,
+        1,
+      ).data);
+      this.ctx.putImageData(tmpImageData, 0, 0);
     },
   },
 };
@@ -82,12 +103,22 @@ canvas {
   padding-bottom: 30px;
 }
 
-.controls > div {
+.btn {
+  border-radius: 5px;
+  background: #666;
   display: inline-block;
-  padding: 10px 20px;
-  margin: 0 20px;
-  border: 1px solid #222;
-  color: #222;
+  margin: 20px 20px 0;
+  color: #fff;
   cursor: pointer;
+  width: 100px;
+  padding: 12px 0;
+  font-size: 20px;
+  font-weight: bold;
+  transition: 0.25s;
+}
+
+.btn:hover {
+  background: #ddd;
+  color: #222;
 }
 </style>

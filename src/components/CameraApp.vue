@@ -2,19 +2,19 @@
   <div class="root">
     <div id="canvasFrame" :style="{ maxWidth: `${length}px` }">
       <div>
-        <canvas ref="canvas"/>
+        <canvas ref="canvas" :style="{ transform: `rotateY(${isPC || facingMode === 'user' ? 180 : 0}deg)` }"/>
       </div>
     </div>
     <video ref="video" playsinline @canplaythrough="startRendering"/>
     <div class="controls">
-      <ThresholdBar class="thresholdBar" :value="threshold" :onChange="changeThreshold"/>
-      <div class="backBtn" @click="closeApp">Top</div>
-      <div class="facingBtn" v-if="!isPC" @click="changeFacing">カメラ変更</div>
+      <ThresholdBar :value="threshold" :onChange="onChangeThreshold"/>
+      <div class="backBtn" @click="closeApp"><img src="../assets/home.svg"/></div>
+      <div class="facingBtn" v-if="!isPC" @click="changeFacing"><img src="../assets/camera.svg"/></div>
       <div class="shutter" @click="shoot"/>
     </div>
 
     <div class="blackFilter" ref="blackFilter"/>
-    <CheckImage v-if="checking" :onCancel="onCancel" :onDecide="onDecide" :threshold="threshold" :radius="radius" :imageData="imageData"/>
+    <CheckImage v-if="checking" :onCancel="onCancel" :onChangeThreshold="onChangeThreshold" :onDecide="onDecide" :threshold="threshold" :radius="radius" :imageData="imageData"/>
   </div>
 </template>
 
@@ -22,18 +22,14 @@
 import getCam from '@/utils/getCam';
 import detectCanvas from '@/utils/detectCanvas';
 import CheckImage from '@/components/CheckImage';
-import ThresholdBar from '@/components/ThresholdBar';
 import osType from '@/utils/osType';
-
-let facingMode = 'environment';
+import ThresholdBar from '@/components/ThresholdBar';
 
 export default {
-  props: ['onClose', 'onSet'],
+  props: ['onClose', 'onSet', 'threshold', 'onChangeThreshold', 'radius'],
   components: { CheckImage, ThresholdBar },
   data() {
     return {
-      threshold: 120,
-      radius: 0.9,
       reqID: null,
       vw: null,
       vh: null,
@@ -41,6 +37,7 @@ export default {
       ctx: null,
       imageData: null,
       checking: false,
+      facingMode: 'environment',
       isPC: osType.isPC(),
     };
   },
@@ -49,7 +46,11 @@ export default {
   },
   methods: {
     setVideo() {
-      getCam(this.$refs.video, { video: { facingMode }, audio: false }, () => {
+      getCam.attach(this.$refs.video, {
+        video: { facingMode: this.facingMode }, audio: false,
+      }, () => {
+        /* eslint-disable no-alert */
+        alert('Camera could not be obtained.');
         this.onClose();
       });
     },
@@ -71,6 +72,7 @@ export default {
       this.reqID = requestAnimationFrame(this.render.bind(this));
     },
     stopRendering() {
+      getCam.detach();
       cancelAnimationFrame(this.reqID);
     },
     render() {
@@ -88,7 +90,6 @@ export default {
       this.onClose();
     },
     shoot() {
-      this.stopRendering();
       this.$refs.blackFilter.style.display = 'block';
       setTimeout(() => {
         this.$refs.blackFilter.style.opacity = 0;
@@ -103,24 +104,21 @@ export default {
         ctx.drawImage(this.$refs.video, (this.vw - length) / 2, (this.vh - length) / 2,
           length, length, 0, 0, length, length);
         this.imageData = ctx.getImageData(0, 0, length, length);
+        this.stopRendering();
         this.checking = true;
       }, 500);
     },
     changeFacing() {
-      facingMode = facingMode === 'user' ? 'environment' : 'user';
+      this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
       this.setVideo();
     },
     onDecide(imageData) {
       this.checking = false;
-      this.$refs.video.pause();
       this.onSet(imageData);
     },
     onCancel() {
       this.checking = false;
-      this.render();
-    },
-    changeThreshold(threshold) {
-      this.threshold = threshold;
+      this.setVideo();
     },
   },
 };
@@ -162,7 +160,6 @@ video {
 
 .controls {
   position: absolute;
-  padding-top: 20px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -172,29 +169,23 @@ video {
 .backBtn {
   position: absolute;
   top: 50%;
-  left: 15px;
+  left: 10px;
   transform: translateY(-50%);
-  color: #fff;
-  font-size: 20px;
   transition: 0.25s;
-  padding: 10px;
+  padding: 12px 10px 5px;
   cursor: pointer;
-  border: 1px solid transparent;
 }
 
 .backBtn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: #fff;
+  opacity: 0.8;
 }
 
 .facingBtn {
   position: absolute;
   top: 50%;
-  right: 15px;
+  right: 10px;
   transform: translateY(-50%);
-  color: #fff;
-  font-size: 20px;
-  padding: 10px;
+  padding: 17px 10px 5px;
 }
 
 .shutter {
@@ -222,10 +213,5 @@ video {
   right: 0;
   bottom: 0;
   display: none;
-}
-
-.thresholdBar {
-  width: 80%;
-
 }
 </style>
