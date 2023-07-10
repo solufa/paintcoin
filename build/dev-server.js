@@ -6,7 +6,6 @@ if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = JSON.parse(config.dev.env.NODE_ENV)
 }
 
-const opn = require('opn')
 const path = require('path')
 const express = require('express')
 const webpack = require('webpack')
@@ -75,7 +74,6 @@ var readyPromise = new Promise((resolve, reject) => {
   _reject = reject
 })
 
-var https = require('https')
 var fs = require('fs')
 var server
 var portfinder = require('portfinder')
@@ -92,9 +90,13 @@ devMiddleware.waitUntilValid(() => {
     console.log('> Listening at ' + uri + '\n')
     // when env is testing, don't need open it
     if (autoOpenBrowser && process.env.NODE_ENV !== 'testing') {
-      opn(uri)
+      import('open').then(open => open.default(uri))
     }
-    server = require('https').createServer({ pfx: fs.readFileSync(__dirname + '/mysslserver.pfx') }, app).listen(port)
+    server = require('https').createServer({
+      key: fs.readFileSync(__dirname + '/server.key'),
+      cert: fs.readFileSync(__dirname + '/server.crt'),
+      passphrase: '',
+    }, app).listen(port)
     _resolve()
   })
 })
